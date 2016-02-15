@@ -46,13 +46,69 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     }
 }
 
+// Lire le fichier objet ( f et v )
+int lecture_objet(const std::string & path) {
+    fstream fichier(path.c_str());
+    vector < string > tabf;
+    vector < string > tabv;
+
+    if (!fichier) {
+        cout << "erreur" << endl;
+        return 1;
+    }
+
+    else {
+
+        while (!fichier.eof()) {
+            string ligne;
+            getline(fichier, ligne);
+
+            if (ligne.substr(0, 2) == "f ") {
+                ligne = ligne.substr(2, ligne.size());
+                string l;
+
+                int i = 0;
+                char * pch;
+                char s[ligne.size() + 1];
+                strcpy(s, ligne.c_str());
+                ligne.erase();
+
+                pch = strtok(s, "/");
+                while (pch != NULL) {
+
+                    if (i == 0) {
+                        l = l + " " + pch;
+                    }
+
+                    pch = strtok(NULL, "/");
+                    if (i == 3) {
+                        i = 0;
+                    } else {
+                        i += 1;
+                    }
+                }
+
+                tabf.push_back(l);
+            }
+
+            if (ligne.substr(0, 2) == "v ") {
+                ligne = ligne.substr(2, ligne.size());
+                tabv.push_back(ligne);
+            }
+
+        }
+
+    }
+    fichier.close();
+    return 0;
+}
+
 
 
 
 
 int main(int argc, char** argv) {
     TGAImage image(1000, 1000, TGAImage::RGB);
-    line(200,250,400,450,image,red);
     image.flip_vertically();
     image.write_tga_file("ligne.tga");
     return 0;

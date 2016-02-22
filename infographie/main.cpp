@@ -48,19 +48,35 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 }
 
 
-TGAImage dessiner(int x1, int y1, int x2, int y2, int x3, int y3,TGAImage image,TGAColor color){
-  //  TGAImage image(800, 800, TGAImage::RGB);
+TGAImage dessin(TGAImage image,float **buffer){
    for(int i = 0; i<1000 ; i++){
       for(int j = 0 ; j<1000 ; j++){
-    if((((x1-i)*(y2-j)-(y1-j)*(x2-i))>0 && ((x2-i)*(y3-j)-(y2-j)*(x3-i))>0 && ((x3-i)*(y1-j)-(y3-j)*(x1-i))>0 ) || (((x1-i)*(y2-j)-(y1-j)*(x2-i))<0 && ((x2-i)*(y3-j)-(y2-j)*(x3-i))<0 && ((x3-i)*(y1-j)-(y3-j)*(x1-i))<0 )  ){
-        image.set(i,j,color);
-	}
+        if( buffer[i][j]!=NULL)
+            {
+                image.set(i,j,TGAColor(buffer[i][j]*255,buffer[i][j]*255,buffer[i][j]*255,255));
+            }
       }
    }
-   // image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-   // image.write_tga_file("triangle.tga");
     return image;
 }
+
+
+float** supprZone(int x1, int y1, int x2, int y2, int x3, int y3,float intensity, float **buffer ){
+   for(int i = 0; i<1000 ; i++){
+      for(int j = 0 ; j<1000 ; j++){
+        if((((x1-i)*(y2-j)-(y1-j)*(x2-i))>0 && ((x2-i)*(y3-j)-(y2-j)*(x3-i))>0 && ((x3-i)*(y1-j)-(y3-j)*(x1-i))>0 ) || (((x1-i)*(y2-j)-(y1-j)*(x2-i))<0 && ((x2-i)*(y3-j)-(y2-j)*(x3-i))<0 && ((x3-i)*(y1-j)-(y3-j)*(x1-i))<0 )  ){
+            if( buffer[i][j]==NULL || intensity > buffer[i][j])
+            {
+                //image.set(i,j,color);
+                buffer[i][j]=intensity;
+            }
+        }
+      }
+   }
+
+    return buffer ;
+}
+
 
 // recupere les abscisses
 double getabscisse(string v) {
@@ -127,10 +143,14 @@ double getprofondeur(string v) {
     return res;
 }
 
-// Dessine les triangles 
+// Dessine les triangles
 void creation_triangle(vector<string> tabv, vector<string> tabf) {
 	TGAImage image(1000, 1000, TGAImage::RGB);
 	int point1 = -1, point2 = -1, point3 = -1;
+    float **buffer;
+    buffer = new float* [ 1000 ];
+    for (int i=0; i < 1000; i++)
+    buffer[i] = new float[ 1000 ];
 
 	for (int i = 0; i < tabf.size(); i++) {
 		string ligne = tabf[i];
@@ -178,7 +198,6 @@ void creation_triangle(vector<string> tabv, vector<string> tabf) {
         z1 = (getprofondeur(v2) + 1) * 500;
         z2 = (getprofondeur(v3) + 1) * 500;
 
-
         Vec3f world_coords[3];
         world_coords[0] = { x0,y0,z0 };
         world_coords[1] = { x1,y1,z1 };
@@ -189,14 +208,17 @@ void creation_triangle(vector<string> tabv, vector<string> tabf) {
         Vec3f n = (world_coords[2] - world_coords[0])^(world_coords[1]-world_coords[0]);
         n.normalize();
         float intensity = n * light_dir;
+
+
+
         if(intensity > 0){
              line(x0,y0,x1,y1,image,TGAColor(intensity*255,intensity*255,intensity*255,255));
              line(x1,y1,x2,y2,image,TGAColor(intensity*255,intensity*255,intensity*255,255));
              line(x0,y0,x2,y2,image,TGAColor(intensity*255,intensity*255,intensity*255,255));
-             image =dessiner(x0,y0,x1,y1,x2,y2,image, TGAColor(intensity*255,intensity*255,intensity*255,255));
+             buffer =supprZone(x0,y0,x1,y1,x2,y2,intensity, buffer);
         }
 	}
-
+    image = dessin(image, buffer);
 	image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
 	image.write_tga_file("visage.tga");
 }

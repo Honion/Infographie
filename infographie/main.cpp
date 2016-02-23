@@ -47,13 +47,24 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     }
 }
 
+void load_texture(std::string filename, const char *suffix, TGAImage &img) {
+    std::string texfile(filename);
+    size_t dot = texfile.find_last_of(".");
+    if (dot!=std::string::npos) {
+        texfile = texfile.substr(0,dot) + std::string(suffix);
+        std::cerr << "texture file " << texfile << " loading " << (img.read_tga_file(texfile.c_str()) ? "ok" : "failed") << std::endl;
+        img.flip_vertically();
+    }
+}
 
-TGAImage dessin(TGAImage image,float **buffer){
+
+
+TGAImage dessin(TGAImage image,float **buffer, TGAImage diffusemap){
    for(int i = 0; i<1000 ; i++){
       for(int j = 0 ; j<1000 ; j++){
         if( buffer[i][j]!=NULL)
             {
-                image.set(i,j,TGAColor(buffer[i][j]*255,buffer[i][j]*255,buffer[i][j]*255,255));
+                image.set(i, j, TGAColor(diffusemap.get(i,j).r*buffer[i][j], diffusemap.get(i,j).g*buffer[i][j], diffusemap.get(i,j).b*buffer[i][j],255));
             }
       }
    }
@@ -67,7 +78,6 @@ float** supprZone(int x1, int y1, int x2, int y2, int x3, int y3,float intensity
         if((((x1-i)*(y2-j)-(y1-j)*(x2-i))>0 && ((x2-i)*(y3-j)-(y2-j)*(x3-i))>0 && ((x3-i)*(y1-j)-(y3-j)*(x1-i))>0 ) || (((x1-i)*(y2-j)-(y1-j)*(x2-i))<0 && ((x2-i)*(y3-j)-(y2-j)*(x3-i))<0 && ((x3-i)*(y1-j)-(y3-j)*(x1-i))<0 )  ){
             if( buffer[i][j]==NULL || intensity > buffer[i][j])
             {
-                //image.set(i,j,color);
                 buffer[i][j]=intensity;
             }
         }
@@ -144,7 +154,7 @@ double getprofondeur(string v) {
 }
 
 // Dessine les triangles
-void creation_triangle(vector<string> tabv, vector<string> tabf) {
+void creation_triangle(vector<string> tabv, vector<string> tabf, TGAImage diffusemap) {
 	TGAImage image(1000, 1000, TGAImage::RGB);
 	int point1 = -1, point2 = -1, point3 = -1;
     float **buffer;
@@ -218,7 +228,7 @@ void creation_triangle(vector<string> tabv, vector<string> tabf) {
              buffer =supprZone(x0,y0,x1,y1,x2,y2,intensity, buffer);
         }
 	}
-    image = dessin(image, buffer);
+    image = dessin(image, buffer, diffusemap);
 	image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
 	image.write_tga_file("visage.tga");
 }
@@ -226,6 +236,10 @@ void creation_triangle(vector<string> tabv, vector<string> tabf) {
 // Lire le fichier objet ( f et v )
 int lecture_objet(const std::string & path) {
 	fstream fichier(path.c_str());
+
+	TGAImage diffusemap;
+    load_texture(path, "_diffuse.tga", diffusemap);
+
 	vector < string > tabf;
 	vector < string > tabv;
 
@@ -277,7 +291,7 @@ int lecture_objet(const std::string & path) {
 
 	}
 	fichier.close();
-	creation_triangle(tabv, tabf);
+	creation_triangle(tabv, tabf, diffusemap);
 	return 0;
 }
 

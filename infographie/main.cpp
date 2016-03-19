@@ -97,7 +97,7 @@ TGAImage dessin(float x1, float y1, float z1, float x2, float y2, float z2, floa
         for (int j=miny; j<=maxy; j++){
             float* bar = new float[3];
             bar = barycentre(x1, y1, x2, y2, x3, y3, i, j);
-            if ( bar[0]>=0 && bar[1]>=0 && bar[1]>=0 ) {
+            if ( (((x1-i)*(y2-j)-(y1-j)*(x2-i))>=0 && ((x2-i)*(y3-j)-(y2-j)*(x3-i))>=0 && ((x3-i)*(y1-j)-(y3-j)*(x1-i))>=0 ) || (((x1-i)*(y2-j)-(y1-j)*(x2-i))<=0 && ((x2-i)*(y3-j)-(y2-j)*(x3-i))<=0 && ((x3-i)*(y1-j)-(y3-j)*(x1-i))<=0 ) ) {
                 float z = bar[0]*z1 + bar[1]*z2 + bar[2]*z3;
                 if ( z > zbuffer[i+j*1000] ) {
                     zbuffer[i+j*1000] = z;

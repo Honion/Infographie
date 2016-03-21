@@ -373,6 +373,7 @@ void creation_triangle(vector<string> tabv, vector<string> tabf, vector<string> 
         screen_coords[2] = { m2v(m)};
         Vec3f n = (world_coords[2] - world_coords[0])^(world_coords[1]-world_coords[0]);
         n.normalize();
+        light_dir.normalize();
         float intensity = n * light_dir;
 
     if(intensity > 0){
